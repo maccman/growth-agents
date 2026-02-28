@@ -1,11 +1,6 @@
----
-description: Set up a new Mac for Growth Agents — installs Xcode tools, Homebrew, Node.js, pnpm, Python, uv, and project dependencies
-alwaysApply: false
----
-
 # Mac Setup Action
 
-When the user triggers this action, walk them through setting up their Mac for this repo.
+When the user triggers this command, walk them through setting up their Mac for this repo.
 Run each step automatically. After each install command, verify it succeeded before moving on.
 Speak in plain, friendly language — assume the user has never used a terminal before.
 

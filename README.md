@@ -4,6 +4,17 @@ AI-powered marketing ops and growth automation, running locally through [Cursor]
 
 This project turns Cursor into a marketing co-pilot that can research competitors, generate campaign copy, analyze funnel data, enrich leads, audit SEO, and automate the repetitive work that eats up your week. The magic is in the `.cursor/rules` folder — these rules give Cursor deep marketing domain knowledge so it can execute complex, multi-step growth tasks on your behalf.
 
+## Requirements
+
+This project is designed to run on macOS.
+
+## Setup
+
+1. Download [Cursor](https://cursor.com/) and install it
+2. [Download this project](https://github.com/maccman/growth-agents/archive/refs/heads/master.zip) and unzip it
+3. Open the project in Cursor
+4. Run the `/setup-mac` action to install the dependencies
+
 ## What can it do?
 
 **Content & Copy**
@@ -59,17 +70,6 @@ This project turns Cursor into a marketing co-pilot that can research competitor
 - Model growth scenarios and forecasts
 - Analyze A/B test results for statistical significance
 - Map and optimize conversion funnels
-
-## Requirements
-
-This project is designed to run on macOS.
-
-## Setup
-
-1. Download [Cursor](https://cursor.com/) and install it
-2. [Download this project](https://github.com/maccman/growth-agents/archive/refs/heads/master.zip) and unzip it
-3. Open the project in Cursor
-4. Run the `/setup-mac` action to install the dependencies
 
 ## Examples
 

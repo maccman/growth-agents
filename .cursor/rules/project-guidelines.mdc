@@ -2,15 +2,15 @@
 alwaysApply: true
 ---
 
-# Agent Playground - Project Guidelines
+# Growth Agents - Project Guidelines
 
 ## Project Overview
 
-This is an AI agent playground for generating autonomous scripts and workflows. All agents are designed to perform complex, multi-step tasks including web automation, bookings, data research, and administrative functions.
+This is a marketing ops and growth automation playground powered by Cursor AI. Agents are designed to perform complex, multi-step marketing tasks including lead enrichment, SEO audits, campaign analysis, content generation, competitive intelligence, and reporting.
 
 ## Agent Development Process
 
-1. **Planning First**: Always come up with a good plan before executing any task
+1. **Planning First**: Always come up with a good plan before executing any task. You MUST get sign off on the plan from the user before continuing.
 2. **Write and run typescript or python code**: Write and run typescript/python code to test your ideas. For anything that is best done programmatically, like math or other types of logic, then just write a quick TypeScript/python program and run it.
 3. **ALWAYS prefer running executables vs writing scripts**: Running executables is faster than writing scripts.
 4. **Data from the web**: Use the `web_search` and `mcp_browsermcp` tools to get data from the web. Never use the `mcp_browsermcp` tool to Google search - you should use the dedicated `web_search` tool for that as it's more reliable.
@@ -33,7 +33,7 @@ To communicate with AI providers, use the Vercel AI SDK.
 - `lib/` - Reusable utilities and shared code
 - `scripts/` - Runnable task scripts (use tsx for execution)
 - `types/` - Shared TypeScript type definitions
-- `data/` - Storage for data files (Markdown and CSV)
+- `data/` - Storage for data files (CSV exports, lead lists, campaign data, reports)
 
 ## Package Management
 
@@ -44,15 +44,12 @@ To communicate with AI providers, use the Vercel AI SDK.
 
 ## Data Storage Guidelines
 
-- Use **Markdown** for general data storage and documentation
-- Use **CSV** for tabular data
+- Use **Markdown** for reports, briefs, and documentation
+- Use **CSV** for tabular data (lead lists, campaign metrics, analytics exports)
 - Store all data files in the `data/` directory
+- When generating reports, output to `data/` with a descriptive filename and date
 
 ## Code generation
 
-- You make generate both typescript and python code
+- You may generate both typescript and python code
 - Never write tests for code you generate
-
-## Google Maps MCP
-
-- Use the `mcp_google-maps` tool to get data from Google Maps

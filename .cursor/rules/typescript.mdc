@@ -24,3 +24,8 @@ Prefer typescript over python for any task that can be done in typescript.
 - **Excel:** [`exceljs`](https://www.npmjs.com/package/exceljs)
 - **HTML parsing:** [`cheerio`](https://www.npmjs.com/package/cheerio) (jQuery-like HTML parsing for Node.js)
 - **Markdown parsing:** [`marked`](https://www.npmjs.com/package/marked)
+- **Email sending:** [`resend`](https://www.npmjs.com/package/resend) or [`nodemailer`](https://www.npmjs.com/package/nodemailer)
+- **Email validation:** [`email-validator`](https://www.npmjs.com/package/email-validator)
+- **HTML email templates:** [`mjml`](https://www.npmjs.com/package/mjml) (responsive email framework)
+- **Statistics:** [`simple-statistics`](https://www.npmjs.com/package/simple-statistics) (for A/B test analysis, confidence intervals)
+- **Sitemap parsing:** [`sitemap-parser`](https://www.npmjs.com/package/sitemap-parser) or raw XML parsing with [`fast-xml-parser`](https://www.npmjs.com/package/fast-xml-parser)

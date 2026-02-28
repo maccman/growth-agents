@@ -1,93 +1,95 @@
-# Agent Playground
+# Growth Agents
 
-This project turns [Cursor](https://cursor.com/) into an agentic workflow executor to run tasks on your behalf.
+AI-powered marketing ops and growth automation, running locally through [Cursor](https://cursor.com/).
 
-The magic is in the `.cursor/rules` folder. These rules turn Cursor AI into a powerful AI agent that can run scripts and execute tasks on your local machine.
+This project turns Cursor into a marketing co-pilot that can research competitors, generate campaign copy, analyze funnel data, enrich leads, audit SEO, and automate the repetitive work that eats up your week. The magic is in the `.cursor/rules` folder — these rules give Cursor deep marketing domain knowledge so it can execute complex, multi-step growth tasks on your behalf.
 
-For example, you can ask Cursor to:
+## What can it do?
 
-- Generate a PDF report from a URL
-- Book a flight and hotel
-- Resize an image
+**Content & Copy**
+
+- Draft blog posts, email sequences, ad copy, and social media posts
+- Generate copy variants for A/B testing
+- Repurpose content across channels (blog → Twitter thread → LinkedIn post → newsletter)
+
+**SEO**
+
+- Audit a page or site for technical SEO issues (meta tags, headings, structured data)
+- Research keywords and estimate search volume via APIs
+- Analyze competitor content and backlink profiles
+- Generate SEO-optimized content briefs
+
+**Lead Generation & Enrichment**
+
+- Scrape and structure prospect lists from the web
+- Enrich contact/company data (firmographics, tech stack, social profiles)
+- Score and segment leads based on custom criteria
+- Clean and deduplicate CRM exports
+
+**Analytics & Reporting**
+
+- Analyze campaign performance data from CSV exports
+- Build funnel conversion reports
+- Calculate CAC, LTV, ROAS, and other growth metrics
+- Generate PDF or Markdown reports with charts
+
+**Email Marketing**
+
+- Generate email templates and drip campaign sequences
+- Analyze open/click/conversion data
+- Segment subscriber lists
+- Check email deliverability and spam score indicators
+
+**Competitive Intelligence**
+
+- Monitor competitor websites for changes
+- Build feature comparison matrices
+- Analyze competitor pricing and positioning
+- Track competitor social and content strategy
+
+**Ad Operations**
+
+- Generate ad copy variations for Google/Meta/LinkedIn
+- Analyze ad spend and ROAS from exported data
+- Recommend budget allocation across channels
+
+**Growth Modeling**
+
+- Build retention cohort analyses
+- Model growth scenarios and forecasts
+- Analyze A/B test results for statistical significance
+- Map and optimize conversion funnels
 
 ## Requirements
 
 This project is designed to run on macOS.
 
-### Core Dependencies
-
-- Node.js
-- pnpm (TypeScript/Node.js package manager)
-- Python
-- [uv (Python package manager)](https://docs.astral.sh/uv/) - 10-100x faster than pip
-- [Homebrew](https://brew.sh/) - macOS package manager
-
 ## Setup
 
-1. Clone this repository
+1. Download [Cursor](https://cursor.com/) and install it
+2. [Download this project](https://github.com/maccman/growth-agents/archive/refs/heads/master.zip) and unzip it
+3. Open the project in Cursor
+4. Run the `/setup-mac` action to install the dependencies
 
-2. Install [uv (Python package manager)](https://github.com/astral-sh/uv)
-   
-3. (Optional) Install media processing tools:
-   ```bash
-   brew install imagemagick ghostscript ffmpeg
-   ```
-4. Install dependencies:
+## Examples
 
-   ```bash
-   pnpm install
-   ```
-
-5. Setup your AI provider API keys:
-
-   Copy the example environment file:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-## MCP
-
-Recommended MCP servers for Cursor AI. Add them by heading to Cursor Settings > MCP Servers.
-
-```json
-{
-  "mcpServers": {
-    "browsermcp": {
-      "command": "npx",
-      "args": ["@browsermcp/mcp@latest"]
-    },
-    "google-maps": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-google-maps"],
-      "env": {
-        "GOOGLE_MAPS_API_KEY": "YOUR_GOOGLE_MAPS_API_KEY"
-      }
-    }
-  }
-}
-```
-
-More servers:
-
-- [macos-automator-mcp](https://github.com/steipete/macos-automator-mcp): A Model Context Protocol server for automating macOS tasks using Automator workflows.
-- [Peekaboo Tech](https://www.peekaboo.boo/#tech): A MCP for taking screenshots and more.
-- [Model Context Protocol Servers List](https://github.com/modelcontextprotocol/servers/tree/main?tab=readme-ov-file): A comprehensive list of available MCP servers and their documentation.
-
-## Structure
+Here are some things you can ask Cursor to do:
 
 ```
-agent-playground/
-├── lib/           # Reusable utilities and shared code
-├── scripts/       # Runnable task scripts
-├── types/         # Shared TypeScript type definitions
-├── data/          # CSV files, JSON data, and other data files
-└── package.json   # Project configuration
+"Take this list of 500 leads in data/leads.csv and enrich them with company size,
+industry, and LinkedIn profile URLs"
+
+"Audit example.com for SEO issues and give me a prioritized list of fixes"
+
+"Generate 10 subject line variants for our product launch email, optimized for open rate"
+
+"Analyze data/ad_spend.csv and tell me which channels have the best ROAS"
+
+"Build a 5-email onboarding drip sequence for our SaaS product"
+
+"Research our top 5 competitors and build a feature comparison matrix"
+
+"Take data/signups.csv and build a weekly retention cohort analysis"
+
+"Generate a blog post outline targeting the keyword 'best CRM for startups'"
 ```
-
-## Usage
-
-1. Open Cursor AI
-1. Optionally add any relevent files to the `data/` directory
-1. Ask Cursor to do its thing
-1. Profit!

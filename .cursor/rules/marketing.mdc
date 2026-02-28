@@ -1,0 +1,168 @@
+---
+alwaysApply: false
+---
+
+# Marketing Domain Knowledge
+
+## Key Metrics & Formulas
+
+When calculating marketing metrics, use these standard definitions:
+
+- **CAC (Customer Acquisition Cost)**: Total sales & marketing spend / Number of new customers acquired
+- **LTV (Lifetime Value)**: Average revenue per customer × Average customer lifespan (or ARPU / churn rate for subscription businesses)
+- **LTV:CAC Ratio**: LTV / CAC (healthy = 3:1 or higher)
+- **ROAS (Return on Ad Spend)**: Revenue from ads / Ad spend (break-even = 1.0)
+- **CPC (Cost Per Click)**: Ad spend / Number of clicks
+- **CPM (Cost Per Mille)**: (Ad spend / Impressions) × 1000
+- **CTR (Click-Through Rate)**: Clicks / Impressions × 100
+- **Conversion Rate**: Conversions / Total visitors (or clicks) × 100
+- **MQL → SQL Conversion**: SQLs / MQLs × 100
+- **Churn Rate**: Customers lost in period / Customers at start of period × 100
+- **NRR (Net Revenue Retention)**: (Starting MRR + expansion − contraction − churn) / Starting MRR × 100
+- **Payback Period**: CAC / (ARPU × Gross margin)
+
+## SEO Audits
+
+When performing SEO audits, check for:
+
+**Technical SEO**
+
+- Title tags (present, unique, 50-60 chars)
+- Meta descriptions (present, unique, 150-160 chars)
+- H1 tags (exactly one per page)
+- Image alt text
+- Canonical tags
+- robots.txt and sitemap.xml
+- Page speed / Core Web Vitals
+- Mobile responsiveness
+- HTTPS
+- Broken links (internal and external)
+- Structured data / schema markup
+
+**On-Page SEO**
+
+- Keyword placement (title, H1, first 100 words, URL)
+- Internal linking structure
+- Content length and depth relative to competitors
+- URL structure (short, descriptive, hyphenated)
+
+**Content Quality Signals**
+
+- Originality
+- E-E-A-T signals (Experience, Expertise, Authoritativeness, Trustworthiness)
+- Freshness / last updated date
+- Multimedia (images, videos, infographics)
+
+## Email Marketing Best Practices
+
+When generating email content:
+
+- Subject lines: 6-10 words, frontload the value prop, avoid spam triggers (FREE, !!!, ALL CAPS)
+- Preview text: Complement the subject line (don't repeat it), 40-130 chars
+- Body: One clear CTA per email, scannable with short paragraphs, personalization tokens where appropriate
+- Plain text version should always accompany HTML
+- Unsubscribe link is legally required (CAN-SPAM, GDPR)
+
+**Email sequence pacing:**
+
+- Welcome/onboarding: Day 0, Day 1, Day 3, Day 7, Day 14
+- Nurture: Weekly or biweekly cadence
+- Re-engagement: After 30/60/90 days of inactivity
+
+## Lead Enrichment
+
+When enriching lead data, common fields to add:
+
+- Company name, domain, size (employee count), industry, location
+- LinkedIn profile URL
+- Job title normalization and seniority level
+- Tech stack (via BuiltWith, Wappalyzer, or similar)
+- Funding stage and amount (for startups)
+- Social profiles
+
+Always preserve original data — add new columns, never overwrite source columns.
+
+## Ad Copy
+
+When generating ad copy:
+
+**Google Ads (Search)**
+
+- Headlines: Up to 30 characters each, 15 headlines max
+- Descriptions: Up to 90 characters each, 4 descriptions max
+- Include keywords, CTAs, and unique selling points
+- Use title case for headlines
+
+**Meta (Facebook/Instagram)**
+
+- Primary text: 125 characters visible before "See More"
+- Headline: 27 characters visible
+- Description: 27 characters visible
+- Focus on pain points and outcomes, not features
+
+**LinkedIn**
+
+- Introductory text: 150 characters visible before "See More"
+- Keep professional but not stiff
+- Lead with data or insights
+
+## A/B Testing
+
+When analyzing A/B test results:
+
+- Minimum sample size before drawing conclusions (use power analysis)
+- Calculate p-value — declare significance at p < 0.05
+- Report confidence intervals, not just point estimates
+- Watch for novelty effects (new variants often win initially then regress)
+- Segment results by meaningful dimensions (device, traffic source, user type)
+- Check for Sample Ratio Mismatch (SRM) before trusting results
+
+## Competitive Analysis
+
+When researching competitors, structure the output as:
+
+1. **Overview**: Company, founding year, funding, team size, target market
+2. **Product**: Core features, pricing model, free tier, integrations
+3. **Positioning**: Tagline, value proposition, key differentiators
+4. **Content & SEO**: Blog cadence, top-ranking pages, domain authority
+5. **Social presence**: Channels, follower counts, posting cadence, engagement
+6. **Strengths & Weaknesses**: Relative to the user's product
+
+## Funnel Analysis
+
+Standard funnel stages for SaaS:
+
+1. **Awareness**: Impressions, reach, website visits
+2. **Interest**: Signups, email subscribers, content downloads
+3. **Consideration**: Product trials, demo requests, pricing page views
+4. **Conversion**: Paid customers, plan selection
+5. **Retention**: Active usage, renewal, expansion
+6. **Referral**: NPS, referral program participation, reviews
+
+When analyzing funnels, always calculate stage-to-stage conversion rates and identify the biggest drop-off points.
+
+## Cohort Analysis
+
+When building retention cohort tables:
+
+- Rows = cohort (grouped by signup week/month)
+- Columns = time periods since signup (Week 0, Week 1, ..., or Month 0, Month 1, ...)
+- Cells = % of cohort still active in that period
+- Always include the cohort size (N) in the first column
+- Highlight trends: improving, declining, or stable retention over time
+
+## Common Marketing APIs
+
+These APIs are useful for marketing automation tasks. The agent should check `.env` for keys before attempting to use them, and gracefully handle missing keys by suggesting alternatives or manual approaches.
+
+- **Hunter.io** (`HUNTER_API_KEY`): Email finding and verification
+- **Clearbit** (`CLEARBIT_API_KEY`): Company and person enrichment
+- **SEMrush** (`SEMRUSH_API_KEY`): SEO, keyword research, competitor analysis
+- **Ahrefs** (`AHREFS_API_KEY`): Backlink analysis, keyword research
+- **Google Search Console** (`GOOGLE_SEARCH_CONSOLE_KEY`): Search performance data
+- **Google Analytics** (`GOOGLE_ANALYTICS_KEY`): Website analytics
+- **Mailchimp** (`MAILCHIMP_API_KEY`): Email marketing
+- **SendGrid** (`SENDGRID_API_KEY`): Transactional and marketing email
+- **Resend** (`RESEND_API_KEY`): Transactional email
+- **Stripe** (`STRIPE_API_KEY`): Payment and subscription data for revenue analysis
+- **Apollo.io** (`APOLLO_API_KEY`): Sales intelligence and lead enrichment

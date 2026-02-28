@@ -1,14 +1,20 @@
 {
-  "name": "agent-playground",
+  "name": "growth-agents",
   "type": "module",
   "version": "1.0.0",
-  "description": "AI-generated scripts and utilities for various tasks",
+  "description": "AI-powered marketing ops and growth automation agents for Cursor",
   "license": "MIT",
   "keywords": [
     "ai",
+    "marketing",
+    "growth",
     "automation",
-    "scripts",
-    "typescript"
+    "agents",
+    "cursor",
+    "seo",
+    "email",
+    "analytics",
+    "lead-generation"
   ],
   "scripts": {
     "dev": "tsx watch",

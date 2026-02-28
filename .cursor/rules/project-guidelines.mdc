@@ -8,6 +8,10 @@ alwaysApply: true
 
 This is a marketing ops and growth automation playground powered by Cursor AI. Agents are designed to perform complex, multi-step marketing tasks including lead enrichment, SEO audits, campaign analysis, content generation, competitive intelligence, and reporting.
 
+Users interact with agents through Cursor's Chat to direct marketing tasks.
+
+Assume users are non-technical marketing ops and growth leaders. Be friendly, skip jargon, and never ask them to run terminal commands or choose a programming language — just handle it.
+
 ## Agent Development Process
 
 1. **Planning First**: Always come up with a good plan before executing any task. You MUST get sign off on the plan from the user before continuing.

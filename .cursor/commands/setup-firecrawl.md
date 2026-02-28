@@ -23,10 +23,10 @@ Firecrawl is a web data API that turns any website into clean, LLM-ready markdow
 1. **Install the CLI and authenticate via browser** — This single command installs the CLI globally and opens the browser for Firecrawl authentication:
 
    ```bash
-   npx -y firecrawl-cli@latest init --all --browser
+   npx -y firecrawl-cli@latest init --agent cursor --browser
    ```
 
-   - `--all` installs the Firecrawl skill to every detected AI coding agent
+   - `--agent cursor` installs the Firecrawl skill only for Cursor
    - `--browser` opens the browser for authentication automatically
 
    If the browser auth doesn't work, fall back to manual login:
@@ -36,7 +36,7 @@ Firecrawl is a web data API that turns any website into clean, LLM-ready markdow
    firecrawl login --browser
    ```
 
-   Or if the user already has an API key:
+   Or if the user already has an API key (get one at [firecrawl.dev/app/api-keys](https://www.firecrawl.dev/app/api-keys)):
 
    ```bash
    firecrawl login --api-key <their key>
@@ -50,7 +50,13 @@ Firecrawl is a web data API that turns any website into clean, LLM-ready markdow
 
    This should show authentication status, concurrency limits, and remaining credits. If it doesn't show "Authenticated", go back and re-run the login step.
 
-3. **Get the API key for `.env`** — The CLI stores its own credentials, but the Node SDK reads from `.env`. Run `firecrawl view-config` to see the stored API key, or ask the user to provide it. Add it to the `.env` file in the repo root (create from `.env.example` if it doesn't exist):
+3. **Get the API key for `.env`** — The CLI stores its own credentials, but the Node SDK reads from `.env`. Read the key directly from the credentials file (the `view-config` command masks it):
+
+   ```bash
+   cat ~/Library/Application\ Support/firecrawl-cli/credentials.json
+   ```
+
+   Copy the `apiKey` value. Add it to the `.env` file in the repo root (create from `.env.example` if it doesn't exist):
 
    ```
    FIRECRAWL_API_KEY=<the key>
@@ -62,35 +68,30 @@ Firecrawl is a web data API that turns any website into clean, LLM-ready markdow
    pnpm add @mendable/firecrawl-js
    ```
 
-5. **Smoke-test the CLI** — Run a quick scrape to confirm everything works:
+5. **Smoke-test** — Run the example script (not the CLI directly — the CLI can have connection issues even when the API is healthy):
 
    ```bash
-   firecrawl https://example.com --only-main-content
+   pnpm start scripts/firecrawl-example.ts
    ```
 
-   This should print clean markdown to stdout.
+   - If it prints metadata and markdown, everything works.
+   - If it errors with "Insufficient credits", the connection is fine — the account just needs a top-up at [firecrawl.dev/pricing](https://firecrawl.dev/pricing). Let the user know this is a billing issue, not a setup issue.
+   - Any other error likely means the API key wasn't saved correctly — double-check `.env`.
 
 ### Example script (`scripts/firecrawl-example.ts`)
 
 ```typescript
 import { config } from 'dotenv'
-import Firecrawl from '@mendable/firecrawl-js'
+import { Firecrawl } from '@mendable/firecrawl-js'
 
 config()
 
-const apiKey = process.env.FIRECRAWL_API_KEY
-if (!apiKey) {
-  console.error('Missing FIRECRAWL_API_KEY in .env')
-  process.exit(1)
-}
-
-const firecrawl = new Firecrawl({ apiKey })
-
 async function main() {
+  const app = new Firecrawl({ apiKey: process.env.FIRECRAWL_API_KEY })
   const url = process.argv[2] || 'https://example.com'
   console.log(`Scraping ${url} …\n`)
 
-  const doc = await firecrawl.scrape(url, {
+  const doc = await app.scrape(url, {
     formats: ['markdown'],
   })
 
@@ -105,6 +106,8 @@ async function main() {
 
 main().catch(console.error)
 ```
+
+> **Note:** Use the named import `{ Firecrawl }` — the default import doesn't work with v4 of the SDK.
 
 ## CLI quick reference
 
@@ -160,4 +163,4 @@ firecrawl credit-usage
 
 ## Finish
 
-Once both the CLI smoke test and the example script run successfully, let the user know they're all set. Tell them in simple English what Firecrawl can do for them, give them some examples.
+Once the example script runs (or returns an "Insufficient credits" error confirming the connection works), let the user know they're all set. Tell them in simple English what Firecrawl can do for them, give them some examples. If they're out of credits, remind them to top up at [firecrawl.dev/pricing](https://firecrawl.dev/pricing).

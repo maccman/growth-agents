@@ -52,8 +52,11 @@ Speak in plain, friendly language — assume the user has never used a terminal 
     - `GOOGLE_GENERATIVE_AI_API_KEY` — https://aistudio.google.com/apikey
 
     **Optional marketing APIs (add the ones you use):**
+    - `PERPLEXITY_API_KEY` — https://www.perplexity.ai/settings/api (web-grounded AI search)
+    - `FIRECRAWL_API_KEY` — https://www.firecrawl.dev/app/api-keys (web scraping)
     - `HUNTER_API_KEY` — https://hunter.io/api-keys (email finding)
-    - And others — see `.env.example` for the full list
+    - `SEMRUSH_API_KEY` — https://www.semrush.com/api/ (SEO & keyword research)
+    - `AHREFS_API_KEY` — https://ahrefs.com/api (SEO & backlink analysis)
 
 ## Finish
 

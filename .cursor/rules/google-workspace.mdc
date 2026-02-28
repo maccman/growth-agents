@@ -1,0 +1,76 @@
+---
+alwaysApply: true
+---
+
+# Google Workspace (Gmail, Calendar, Drive, etc.)
+
+## One-off lookups — use the `gog` CLI
+
+For quick, one-off tasks against Gmail, Calendar, Drive, Tasks, Contacts, Sheets, or Docs, use the `gog` CLI directly. No scripting needed.
+
+First verify it's available:
+
+```bash
+gog --version
+```
+
+If not installed, run the **Setup Google Workspace** command.
+
+```bash
+# Gmail
+gog gmail search 'from:alice@example.com newer_than:7d' --max 10
+gog gmail search 'is:unread subject:"invoice"' --json | jq '.threads[].snippet'
+gog gmail thread get <threadId>
+
+# Calendar
+gog calendar events primary --today --max 50 
+gog calendar events primary --week --max 50 
+gog calendar search "standup" --days 30 --max 50 
+
+# Drive
+gog drive search "Q4 report" --max 10
+gog drive download <fileId> --out ./file.pdf
+
+# Tasks / Contacts / Sheets
+gog tasks lists
+gog contacts search "Alice"
+gog sheets get <spreadsheetId> 'Sheet1!A1:D20'
+```
+
+Add `--json` to any command for machine-readable output.
+
+## Programmatic scripts — use the googleapis TypeScript SDK
+
+For anything more than a one-off (looping, writing files, combining APIs, reports), write a TypeScript script. Credentials are already in `.env`.
+
+```typescript
+import { config } from 'dotenv'
+import { google } from 'googleapis'
+
+config()
+
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI,
+)
+oauth2Client.setCredentials({
+  access_token: process.env.GOOGLE_ACCESS_TOKEN,
+  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+  expiry_date: process.env.GOOGLE_TOKEN_EXPIRY ? parseInt(process.env.GOOGLE_TOKEN_EXPIRY) : undefined,
+})
+
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
+const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+const drive = google.drive({ version: 'v3', auth: oauth2Client })
+const sheets = google.sheets({ version: 'v4', auth: oauth2Client })
+```
+
+## Decision guide
+
+| Task | Use |
+|------|-----|
+| Search inbox, check calendar, look up a file | `gog` CLI |
+| Quick data extraction piped to `jq` | `gog --json` |
+| Loop over results, write CSV, combine APIs | TypeScript + `googleapis` |
+| Scheduled or recurring automation | TypeScript + `googleapis` |

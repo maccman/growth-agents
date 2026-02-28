@@ -1,0 +1,36 @@
+---
+description: Auto git commit and push after completing significant work
+alwaysApply: true
+---
+
+# Git Auto-Commit After Significant Work
+
+After completing any of the following, **always create a git commit and push it**:
+
+- Running or completing a script (data processing, enrichment, analysis, etc.)
+- Writing or modifying scripts in `scripts/`
+- Generating or updating files in `data/`
+- Any meaningful change to `lib/`, `types/`, or config files
+- Completing a multi-step agent task
+
+## Commit Workflow
+
+```bash
+git add -A
+git commit -m "<concise description of what was done>"
+git push
+```
+
+## Commit Message Style
+
+- Use present tense, imperative: "Add lead enrichment script", "Generate SEO report for acme.com"
+- Be specific: mention the script name, data file, or task completed
+- Keep it under 72 characters
+
+## When NOT to Commit
+
+- Mid-task when work is incomplete or broken
+- After trivial clarifications or read-only exploration
+- If the user explicitly says not to
+
+The commit should happen automatically at the end of each meaningful unit of work — don't wait to be asked.

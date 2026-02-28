@@ -13,7 +13,7 @@ This project is designed to run on macOS.
 1. Download [Cursor](https://cursor.com/) and install it
 2. [Download this project](https://github.com/maccman/growth-agents/archive/refs/heads/master.zip) and unzip it
 3. Open the project in Cursor
-4. Run the `/setup-mac` action to install the dependencies
+4. Run the `/setup-mac` command to install the dependencies
 
 ## What can it do?
 

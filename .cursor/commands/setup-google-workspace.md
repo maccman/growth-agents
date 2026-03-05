@@ -4,12 +4,12 @@ When the user triggers this command, walk them through setting up Gmail and Goog
 
 ## Overview
 
-This sets up a Google Cloud project with OAuth 2.0 credentials so agents can read Gmail and Google Calendar on behalf of the user. It installs two things:
+This sets up Google Workspace API access so agents can read Gmail, Calendar, Drive, and more on behalf of the user. It installs two things:
 
 1. **`googleapis` npm package** — for use inside TypeScript agent scripts
-2. **`gogcli`** ([github.com/steipete/gogcli](https://github.com/steipete/gogcli)) — a powerful command-line tool (`gog`) for Gmail, Calendar, Drive, Sheets, Tasks, Contacts, and more, with JSON output for scripting
+2. **`gws`** ([github.com/googleworkspace/cli](https://github.com/googleworkspace/cli)) — the official Google Workspace CLI (`@googleworkspace/cli` on npm) for Gmail, Calendar, Drive, Sheets, Tasks, Contacts, and more, with structured JSON output
 
-Both share the same OAuth credentials, so the user only goes through the browser consent flow once. At the end, tokens are saved to `.env` and smoke tests confirm everything works.
+Both use the same GCP project. At the end, tokens are saved to `.env` for TypeScript scripts and `gws` has its own auth — smoke tests confirm everything works.
 
 ---
 
@@ -51,46 +51,57 @@ This opens the browser for Google sign-in. Tell the user to log in with the Goog
 
 ---
 
-## Step 3 — Create a Google Cloud Project
+## Step 3 — Install the gws CLI
 
-Generate a unique project ID and create the project:
+Install the official Google Workspace CLI:
+
+```bash
+npm install -g @googleworkspace/cli
+```
+
+Verify it installed:
+
+```bash
+gws --version
+```
+
+---
+
+## Step 4 — Set up gws auth (project creation + OAuth)
+
+`gws auth setup` handles creating a GCP project, enabling APIs, configuring OAuth consent, and authorizing — all in one command. If `gcloud` is available and authenticated (from Steps 1-2), it can automate the entire flow.
+
+```bash
+gws auth setup
+```
+
+Walk the user through the interactive prompts. This replaces the manual Cloud Console steps for project creation, API enablement, and OAuth consent screen configuration.
+
+Once complete, `gws` is authenticated and ready to use.
+
+> **Note:** Save the GCP project ID that `gws auth setup` creates or uses — you'll need it for the TypeScript OAuth credentials in the next steps.
+
+---
+
+## Step 5 — Create OAuth 2.0 Client Credentials (for TypeScript scripts)
+
+The `gws` CLI has its own auth, but the `googleapis` TypeScript SDK needs separate OAuth client credentials stored in `.env`.
+
+If `gws auth setup` already created a project, use that project. Otherwise, create one:
 
 ```bash
 PROJECT_ID="growth-agents-$(date +%s | tail -c 8)"
 gcloud projects create "$PROJECT_ID" --name="Growth Agents" 2>&1
 gcloud config set project "$PROJECT_ID"
-echo "Project ID: $PROJECT_ID"
 ```
 
-Save the project ID — you'll use it to build console URLs and to identify the credentials file later.
-
-> **Ignore the "environment tag" warning** — Google prints a suggestion to tag the project with a production/dev label. It's harmless and doesn't affect anything.
-
-> **If you get a quota error ("project limit reached")**, the user needs to delete an unused project at [console.cloud.google.com/cloud-resource-manager](https://console.cloud.google.com/cloud-resource-manager) first.
-
-Also capture the **project number** — it appears in the output as a long integer (e.g. `943332063572`). You'll use it to identify the correct credentials JSON file in Step 7.
-
----
-
-## Step 4 — Enable Gmail and Calendar APIs
-
-Enable both in one command:
+Enable the APIs needed for TypeScript scripts:
 
 ```bash
 gcloud services enable gmail.googleapis.com calendar-json.googleapis.com
 ```
 
-This takes a few seconds and completes silently on success.
-
----
-
-## Step 5 — Set Up OAuth Consent Screen (in browser)
-
-This step requires the Cloud Console UI. Tell the user:
-
-> "Now I need you to do a few quick clicks in the Google Cloud Console. I'll guide you through each one — it takes about 2 minutes."
-
-Walk them through these steps one at a time, waiting for confirmation after each:
+Then walk the user through creating OAuth client credentials in the Cloud Console:
 
 1. Open: `https://console.cloud.google.com/apis/credentials/consent?project=PROJECT_ID` (substitute the actual project ID)
 2. Select **"External"** for User Type → click **Create**
@@ -100,42 +111,32 @@ Walk them through these steps one at a time, waiting for confirmation after each
    - **Developer contact email:** their Google email
    - Leave everything else blank
    - Click **Save and Continue**
-4. On the **Scopes** page — click **Save and Continue** (no scopes to add here; the app will request them at runtime)
+4. On the **Scopes** page — click **Save and Continue**
 5. On the **Test Users** page — click **+ Add Users**, enter their Google email address, click **Add** → then **Save and Continue**
 6. On the **Summary** page — click **Back to Dashboard**
 
-Tell the user to confirm when they're back at the dashboard.
+Then create the credentials:
 
----
-
-## Step 6 — Create OAuth 2.0 Client Credentials (in browser)
-
-> "One more set of clicks to create the credentials."
-
-Walk them through:
-
-1. Open: `https://console.cloud.google.com/apis/credentials/oauthclient?project=PROJECT_ID` (substitute the actual project ID)
-2. For **Application type** select **"Desktop app"** (not Web application — Desktop app is needed for `gogcli` and also works for local scripts)
+1. Open: `https://console.cloud.google.com/apis/credentials/oauthclient?project=PROJECT_ID`
+2. For **Application type** select **"Desktop app"**
 3. **Name:** `Growth Agents`
 4. Click **Create**
-5. In the dialog that appears, click **"Download JSON"** to save the credentials file to `~/Downloads/`. It will be named something like `client_secret_PROJECTNUMBER-XXXX.apps.googleusercontent.com.json`
+5. Click **"Download JSON"** to save the credentials file to `~/Downloads/`
 6. Click **OK** to close the dialog
 
 > **Keep the JSON file outside the repo** (leaving it in `~/Downloads/` is fine). Never commit it to git.
 
-Tell the user to confirm when they've downloaded the file.
-
 ---
 
-## Step 7 — Extract Credentials from the JSON File
+## Step 6 — Extract Credentials from the JSON File
 
-You don't need the user to copy/paste anything. Find and read the credentials file directly:
+Find and read the credentials file:
 
 ```bash
 ls ~/Downloads/client_secret_*.json
 ```
 
-If there are multiple files, pick the one that contains the **project number** captured in Step 3 (e.g. a file containing `943332063572` in its name is the one we just created).
+If there are multiple files, pick the one for the project created in Step 5.
 
 Then extract the client ID and secret:
 
@@ -149,11 +150,11 @@ print('CLIENT_SECRET:', d['client_secret'])
 "
 ```
 
-Now write everything to `.env` (create or update the Google section):
+Write everything to `.env` (create or update the Google section):
 
 ```
 # Google APIs (Gmail & Calendar)
-GOOGLE_PROJECT_ID=<project ID from Step 3>
+GOOGLE_PROJECT_ID=<project ID>
 GOOGLE_CLIENT_ID=<extracted client_id>
 GOOGLE_CLIENT_SECRET=<extracted client_secret>
 GOOGLE_CREDENTIALS_PATH=<full path to the downloaded JSON file>
@@ -164,11 +165,11 @@ GOOGLE_TOKEN_EXPIRY=
 GOOGLE_AUTH_EMAIL=
 ```
 
-No need to ask the user for any values — get everything from the JSON file and Step 3.
+No need to ask the user for any values — get everything from the JSON file and Step 5.
 
 ---
 
-## Step 8 — Install the googleapis package
+## Step 7 — Install the googleapis package
 
 ```bash
 pnpm add googleapis
@@ -176,7 +177,7 @@ pnpm add googleapis
 
 ---
 
-## Step 9 — Create the OAuth Token Exchange Script
+## Step 8 — Create the OAuth Token Exchange Script
 
 Create the file `scripts/google-oauth-setup.ts` if it doesn't already exist:
 
@@ -306,7 +307,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 ---
 
-## Step 10 — Run the OAuth Token Exchange
+## Step 9 — Run the OAuth Token Exchange
 
 ```bash
 pnpm start scripts/google-oauth-setup.ts
@@ -318,74 +319,17 @@ Wait for the script to print "🎉 OAuth setup complete!" before continuing.
 
 ---
 
-## Step 11 — Install gogcli
-
-[`gogcli`](https://github.com/steipete/gogcli) is a fast, script-friendly CLI (`gog`) that covers Gmail, Calendar, Drive, Sheets, Tasks, Contacts, Chat, and more. It uses JSON-first output, making it great for piping into agents.
+## Step 10 — Smoke-test gws
 
 ```bash
-brew install steipete/tap/gogcli
+gws gmail users messages list --params '{"userId": "me", "maxResults": 5}'
+gws calendar events list --params '{"calendarId": "primary", "timeMin": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'", "maxResults": 5}'
 ```
 
-Verify it installed:
-
-```bash
-gog --version
-```
-
----
-
-## Step 12 — Connect gogcli to the OAuth credentials
-
-Use the credentials JSON path from `GOOGLE_CREDENTIALS_PATH` in `.env`:
-
-```bash
-gog auth credentials "$GOOGLE_CREDENTIALS_PATH"
-```
-
-Or use the full path directly (read it from `.env` if the variable isn't exported). This stores the credentials in gogcli's own secure config directory — not the repo.
-
----
-
-## Step 13 — Authorize gogcli
-
-```bash
-gog auth add <their-email>
-```
-
-Use the email from `GOOGLE_AUTH_EMAIL` in `.env`.
-
-This opens the browser for a second OAuth consent. **gogcli requests broad scopes upfront** (Gmail, Calendar, Drive, Sheets, Tasks, Contacts, etc.) — the user may ask "is this safe?". Reassure them:
-
-> "Yes — gogcli is open source and the token is stored only in your macOS Keychain. Nothing is sent to any server other than Google's own APIs. It requests broad scopes upfront so you don't need to re-authorize for each service later. Since this is your own account on your own Mac, it's fine."
-
-After the user clicks **Allow** in the browser, gogcli will print a confirmation showing the authorized email and services. Wait for it to complete.
-
-Then immediately set the account as the default in the current shell session:
-
-```bash
-export GOG_ACCOUNT=<their-email>
-```
-
-And persist it to their shell profile:
-
-```bash
-echo 'export GOG_ACCOUNT=<their-email>' >> ~/.zshrc
-```
-
----
-
-## Step 14 — Smoke-test gogcli
-
-```bash
-gog gmail search 'newer_than:1d' --max 5
-gog calendar events primary --today
-```
-
-**Expected:** A table of email threads and a list of today's calendar events.
+**Expected:** JSON output with email message IDs and a list of upcoming calendar events.
 
 **Troubleshooting:**
-- `no credentials found` — re-run `gog auth credentials <path>`
-- `token has been expired or revoked` — re-run `gog auth add <email>`
+- Auth issues — re-run `gws auth login` or `gws auth setup`
 - `permission denied` / `403` — an API isn't enabled. Re-run:
   ```bash
   gcloud services enable gmail.googleapis.com calendar-json.googleapis.com
@@ -394,7 +338,7 @@ gog calendar events primary --today
 
 ---
 
-## Step 15 — Create the TypeScript Smoke Test Script
+## Step 11 — Create the TypeScript Smoke Test Script
 
 Create the file `scripts/google-smoke-test.ts` if it doesn't already exist:
 
@@ -486,7 +430,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 ---
 
-## Step 16 — Run the TypeScript Smoke Test
+## Step 12 — Run the TypeScript Smoke Test
 
 ```bash
 pnpm start scripts/google-smoke-test.ts
@@ -496,41 +440,40 @@ pnpm start scripts/google-smoke-test.ts
 
 **Troubleshooting:**
 - `invalid_grant` — the OAuth flow timed out or the account isn't added as a test user. Re-run `pnpm start scripts/google-oauth-setup.ts` to get fresh tokens.
-- `Access Not Configured` — an API isn't enabled. Re-run Step 4.
+- `Access Not Configured` — an API isn't enabled. Re-run Step 5 API enablement.
 - `insufficient authentication scopes` — re-run `pnpm start scripts/google-oauth-setup.ts` (the `prompt: 'consent'` flag forces re-authorization with the full scope set).
 
 ---
 
 ## Finish
 
-Once both smoke tests pass (gogcli in Step 14, TypeScript in Step 16), let the user know they're all set.
+Once both smoke tests pass (gws in Step 10, TypeScript in Step 12), let the user know they're all set.
 
 > **Note:** `.env` is gitignored, so there's nothing to commit at the end of this setup — that's expected and correct. The credentials live only on this machine.
 
-**`gog` CLI — quick reference for everyday use:**
+**`gws` CLI — quick reference for everyday use:**
 
 ```bash
 # Gmail
-gog gmail search 'from:boss@example.com newer_than:7d'
-gog gmail search 'is:unread' --max 20 --json | jq '.threads[].snippet'
-gog gmail thread get <threadId>
+gws gmail users messages list --params '{"userId": "me", "maxResults": 10, "q": "from:boss@example.com newer_than:7d"}'
+gws gmail users messages list --params '{"userId": "me", "maxResults": 20, "q": "is:unread"}'
+gws gmail users messages get --params '{"userId": "me", "id": "<messageId>"}'
 
 # Calendar
-gog calendar events primary --today
-gog calendar events primary --week
-gog calendar search "standup" --days 30
+gws calendar events list --params '{"calendarId": "primary", "maxResults": 10}'
+gws calendar events list --params '{"calendarId": "primary", "q": "standup", "maxResults": 50}'
 
 # Drive
-gog drive search "Q4 report"
-gog drive download <fileId> --out ./file.pdf
+gws drive files list --params '{"q": "name contains '\''Q4 report'\''", "pageSize": 10}'
+gws drive files get --params '{"fileId": "<fileId>", "alt": "media"}' > ./file.pdf
 
 # Tasks
-gog tasks lists
-gog tasks list <tasklistId>
+gws tasks tasklists list
+gws tasks tasks list --params '{"tasklist": "<tasklistId>"}'
 ```
 
 **What they now have:**
-- `gog` CLI for interactive use and shell scripting against all Google Workspace APIs, with token stored securely in macOS Keychain
+- `gws` CLI (official Google Workspace CLI from github.com/googleworkspace/cli) for interactive use and shell scripting against all Google Workspace APIs
 - `googleapis` npm package for TypeScript agent scripts, with tokens in `.env` that auto-refresh
-- Both tools share the same OAuth app — only one Cloud project to manage
-- To expand access later (e.g. send email, edit calendar): `gog auth add <email> --services gmail,calendar --force-consent`
+- Both tools use the same GCP project — only one Cloud project to manage
+- For subsequent logins: `gws auth login`

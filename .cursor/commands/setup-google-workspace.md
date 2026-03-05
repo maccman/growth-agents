@@ -1,65 +1,20 @@
-# Setup Gmail & Google Calendar
+# Setup Google Workspace
 
-When the user triggers this command, walk them through setting up Gmail and Google Calendar API access using OAuth 2.0. Run each automated step immediately — don't wait to be asked. Speak in plain, friendly language. Pause for user input only when explicitly noted.
+This command sets up Google Workspace API access by installing the `gws` CLI and the `googleapis` npm package for TypeScript agent scripts.
 
-## Overview
-
-This sets up Google Workspace API access so agents can read Gmail, Calendar, Drive, and more on behalf of the user. It installs two things:
-
-1. **`googleapis` npm package** — for use inside TypeScript agent scripts
-2. **`gws`** ([github.com/googleworkspace/cli](https://github.com/googleworkspace/cli)) — the official Google Workspace CLI (`@googleworkspace/cli` on npm) for Gmail, Calendar, Drive, Sheets, Tasks, Contacts, and more, with structured JSON output
-
-Both use the same GCP project. At the end, tokens are saved to `.env` for TypeScript scripts and `gws` has its own auth — smoke tests confirm everything works.
+> **Steps 1-4 MUST be run by the user in a real Terminal window, NOT from inside Cursor.** The `gws` auth flow is highly interactive (opens browsers, requires terminal input) and cannot be automated.
 
 ---
 
-## Step 1 — Install the Google Cloud CLI
+## Step 1 — Install gws
 
-Check if it's already installed:
-
-```bash
-gcloud --version
-```
-
-If not installed, install it via Homebrew:
-
-```bash
-brew install --cask google-cloud-sdk
-```
-
-After installing, verify it's available. If `gcloud` isn't on the PATH, tell the user to restart their terminal and re-trigger this command.
-
----
-
-## Step 2 — Authenticate with Google
-
-First check if already authenticated:
-
-```bash
-gcloud auth list
-```
-
-If an account is already listed with a `*` (active), ask the user if that's the Google account they want to use for Gmail and Calendar. If yes, skip the login step.
-
-If not authenticated (or they want a different account):
-
-```bash
-gcloud auth login
-```
-
-This opens the browser for Google sign-in. Tell the user to log in with the Google account whose Gmail and Calendar they want to access. Wait for them to confirm before continuing.
-
----
-
-## Step 3 — Install the gws CLI
-
-Install the official Google Workspace CLI:
+Tell the user to open **Terminal** and run:
 
 ```bash
 npm install -g @googleworkspace/cli
 ```
 
-Verify it installed:
+Verify:
 
 ```bash
 gws --version
@@ -67,78 +22,98 @@ gws --version
 
 ---
 
-## Step 4 — Set up gws auth (project creation + OAuth)
+## Step 2 — Run gws auth setup
 
-`gws auth setup` handles creating a GCP project, enabling APIs, configuring OAuth consent, and authorizing — all in one command. If `gcloud` is available and authenticated (from Steps 1-2), it can automate the entire flow.
+**This step is interactive and MUST be done in Terminal, not from Cursor.**
+
+### If `gcloud` is installed:
+
+Tell the user to run:
 
 ```bash
 gws auth setup
 ```
 
-Walk the user through the interactive prompts. This replaces the manual Cloud Console steps for project creation, API enablement, and OAuth consent screen configuration.
+This single command handles everything:
+- Creates a GCP project
+- Enables required APIs
+- Configures OAuth consent screen
+- Logs you in via browser
 
-Once complete, `gws` is authenticated and ready to use.
+### If `gcloud` is NOT installed:
 
-> **Note:** Save the GCP project ID that `gws auth setup` creates or uses — you'll need it for the TypeScript OAuth credentials in the next steps.
+Two options:
 
----
+1. **Install gcloud first** — `brew install --cask google-cloud-sdk`, then run `gws auth setup` as above.
+2. **Manual path** — Create a project in [Cloud Console](https://console.cloud.google.com/), configure OAuth consent screen, create a Desktop OAuth client, download the client JSON to `~/.config/gws/client_secret.json`, then run:
+   ```bash
+   gws auth login
+   ```
 
-## Step 5 — Create OAuth 2.0 Client Credentials (for TypeScript scripts)
-
-The `gws` CLI has its own auth, but the `googleapis` TypeScript SDK needs separate OAuth client credentials stored in `.env`.
-
-If `gws auth setup` already created a project, use that project. Otherwise, create one:
-
-```bash
-PROJECT_ID="growth-agents-$(date +%s | tail -c 8)"
-gcloud projects create "$PROJECT_ID" --name="Growth Agents" 2>&1
-gcloud config set project "$PROJECT_ID"
-```
-
-Enable the APIs needed for TypeScript scripts:
-
-```bash
-gcloud services enable gmail.googleapis.com calendar-json.googleapis.com
-```
-
-Then walk the user through creating OAuth client credentials in the Cloud Console:
-
-1. Open: `https://console.cloud.google.com/apis/credentials/consent?project=PROJECT_ID` (substitute the actual project ID)
-2. Select **"External"** for User Type → click **Create**
-3. Fill in the form:
-   - **App name:** `Growth Agents`
-   - **User support email:** their Google email
-   - **Developer contact email:** their Google email
-   - Leave everything else blank
-   - Click **Save and Continue**
-4. On the **Scopes** page — click **Save and Continue**
-5. On the **Test Users** page — click **+ Add Users**, enter their Google email address, click **Add** → then **Save and Continue**
-6. On the **Summary** page — click **Back to Dashboard**
-
-Then create the credentials:
-
-1. Open: `https://console.cloud.google.com/apis/credentials/oauthclient?project=PROJECT_ID`
-2. For **Application type** select **"Desktop app"**
-3. **Name:** `Growth Agents`
-4. Click **Create**
-5. Click **"Download JSON"** to save the credentials file to `~/Downloads/`
-6. Click **OK** to close the dialog
-
-> **Keep the JSON file outside the repo** (leaving it in `~/Downloads/` is fine). Never commit it to git.
+Credentials are stored encrypted in the OS keychain (`~/.config/gws/`).
 
 ---
 
-## Step 6 — Extract Credentials from the JSON File
+## Step 3 — Scope warning
 
-Find and read the credentials file:
+Unverified apps (testing mode) are limited to ~25 OAuth scopes. Instead of accepting the broad default scope set, use the `--scopes` flag to request only what you need:
+
+```bash
+gws auth login --scopes drive,gmail,calendar
+```
+
+Tell the user to keep their scope list minimal to stay under the limit.
+
+---
+
+## Step 4 — Verify gws
+
+Smoke-test in Terminal:
+
+```bash
+gws gmail users messages list --params '{"userId": "me", "maxResults": 5}'
+gws calendar events list --params '{"calendarId": "primary"}'
+```
+
+**Expected:** JSON output with email message IDs and calendar events.
+
+**Troubleshooting:**
+- Auth issues — re-run `gws auth login`
+- `permission denied` / `403` — an API isn't enabled; re-run `gws auth setup` or enable manually in Cloud Console
+- `account not added as test user` — add your email under OAuth consent screen > Test Users in Cloud Console
+
+---
+
+## Step 5 — googleapis for TypeScript
+
+The `gws` CLI and the `googleapis` TypeScript SDK use **separate auth**. The TypeScript scripts need OAuth client credentials stored in `.env`.
+
+### 5a — Install googleapis
+
+```bash
+pnpm add googleapis
+```
+
+### 5b — Create OAuth client credentials
+
+Use the GCP project that `gws auth setup` created. Walk the user through the Cloud Console:
+
+1. Open the [Credentials page](https://console.cloud.google.com/apis/credentials) for the project
+2. Click **+ Create Credentials** > **OAuth client ID**
+3. Application type: **Desktop app**, Name: any name
+4. Click **Create**, then **Download JSON**
+
+> Keep the JSON file outside the repo (e.g. `~/Downloads/`). Never commit it.
+
+### 5c — Extract credentials to .env
+
+Find and read the downloaded JSON:
 
 ```bash
 ls ~/Downloads/client_secret_*.json
 ```
 
-If there are multiple files, pick the one for the project created in Step 5.
-
-Then extract the client ID and secret:
+Extract client ID and secret:
 
 ```bash
 python3 -c "
@@ -150,11 +125,11 @@ print('CLIENT_SECRET:', d['client_secret'])
 "
 ```
 
-Write everything to `.env` (create or update the Google section):
+Write to `.env`:
 
 ```
 # Google APIs (Gmail & Calendar)
-GOOGLE_PROJECT_ID=<project ID>
+GOOGLE_PROJECT_ID=<project ID from gws auth setup>
 GOOGLE_CLIENT_ID=<extracted client_id>
 GOOGLE_CLIENT_SECRET=<extracted client_secret>
 GOOGLE_CREDENTIALS_PATH=<full path to the downloaded JSON file>
@@ -165,21 +140,9 @@ GOOGLE_TOKEN_EXPIRY=
 GOOGLE_AUTH_EMAIL=
 ```
 
-No need to ask the user for any values — get everything from the JSON file and Step 5.
+### 5d — Create the OAuth token exchange script
 
----
-
-## Step 7 — Install the googleapis package
-
-```bash
-pnpm add googleapis
-```
-
----
-
-## Step 8 — Create the OAuth Token Exchange Script
-
-Create the file `scripts/google-oauth-setup.ts` if it doesn't already exist:
+Create `scripts/google-oauth-setup.ts` if it doesn't already exist:
 
 ```typescript
 import { config } from 'dotenv'
@@ -208,7 +171,7 @@ async function main() {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
-    console.error('❌ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in .env first')
+    console.error('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in .env first')
     process.exit(1)
   }
 
@@ -220,7 +183,7 @@ async function main() {
     prompt: 'consent',
   })
 
-  console.log('🔐 Opening browser for Google authorization...')
+  console.log('Opening browser for Google authorization...')
   console.log('If the browser does not open automatically, visit this URL:')
   console.log(authUrl)
   console.log('')
@@ -245,7 +208,7 @@ async function main() {
       if (code) {
         res.writeHead(200, { 'Content-Type': 'text/html' })
         res.end(
-          '<h1>✅ Authorization successful!</h1><p>You can close this tab and return to the terminal.</p>',
+          '<h1>Authorization successful!</h1><p>You can close this tab and return to the terminal.</p>',
         )
         server.close()
         resolve(code)
@@ -254,11 +217,11 @@ async function main() {
 
     server.on('error', reject)
     server.listen(8080, () => {
-      console.log('⏳ Waiting for authorization on http://localhost:8080 ...')
+      console.log('Waiting for authorization on http://localhost:8080 ...')
     })
   })
 
-  console.log('✅ Authorization code received. Exchanging for tokens...')
+  console.log('Authorization code received. Exchanging for tokens...')
 
   const { tokens } = await oauth2Client.getToken(code)
   oauth2Client.setCredentials(tokens)
@@ -266,7 +229,7 @@ async function main() {
   const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client })
   const { data: userInfo } = await oauth2.userinfo.get()
 
-  console.log(`✅ Authenticated as: ${userInfo.email}`)
+  console.log(`Authenticated as: ${userInfo.email}`)
 
   const envPath = path.join(__dirname, '..', '.env')
   let envContent = fs.readFileSync(envPath, 'utf-8')
@@ -290,13 +253,13 @@ async function main() {
   fs.writeFileSync(envPath, envContent)
 
   console.log('')
-  console.log('✅ Tokens saved to .env:')
-  console.log('   GOOGLE_ACCESS_TOKEN  ✓')
-  console.log('   GOOGLE_REFRESH_TOKEN ✓')
-  console.log('   GOOGLE_TOKEN_EXPIRY  ✓')
+  console.log('Tokens saved to .env:')
+  console.log('   GOOGLE_ACCESS_TOKEN  done')
+  console.log('   GOOGLE_REFRESH_TOKEN done')
+  console.log('   GOOGLE_TOKEN_EXPIRY  done')
   console.log('   GOOGLE_AUTH_EMAIL   ', userInfo.email)
   console.log('')
-  console.log('🎉 OAuth setup complete! Run the smoke test:')
+  console.log('OAuth setup complete! Run the smoke test:')
   console.log('   pnpm start scripts/google-smoke-test.ts')
 }
 
@@ -305,42 +268,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 ```
 
----
-
-## Step 9 — Run the OAuth Token Exchange
+### 5e — Run the OAuth token exchange
 
 ```bash
 pnpm start scripts/google-oauth-setup.ts
 ```
 
-This opens a browser window requesting Gmail and Calendar read access. After the user clicks **Allow**, the script captures the auth code automatically via the local server, exchanges it for tokens, and writes them to `.env`. Tell the user to watch for the "✅ Authorization successful!" page in the browser tab, then return to the terminal.
+This opens a browser for Google sign-in. After the user clicks **Allow**, tokens are written to `.env`.
 
-Wait for the script to print "🎉 OAuth setup complete!" before continuing.
+### 5f — Create and run the TypeScript smoke test
 
----
-
-## Step 10 — Smoke-test gws
-
-```bash
-gws gmail users messages list --params '{"userId": "me", "maxResults": 5}'
-gws calendar events list --params '{"calendarId": "primary", "timeMin": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'", "maxResults": 5}'
-```
-
-**Expected:** JSON output with email message IDs and a list of upcoming calendar events.
-
-**Troubleshooting:**
-- Auth issues — re-run `gws auth login` or `gws auth setup`
-- `permission denied` / `403` — an API isn't enabled. Re-run:
-  ```bash
-  gcloud services enable gmail.googleapis.com calendar-json.googleapis.com
-  ```
-- `account not added as test user` — go back to Step 5 and confirm the email is listed under Test Users
-
----
-
-## Step 11 — Create the TypeScript Smoke Test Script
-
-Create the file `scripts/google-smoke-test.ts` if it doesn't already exist:
+Create `scripts/google-smoke-test.ts` if it doesn't already exist:
 
 ```typescript
 import { config } from 'dotenv'
@@ -363,10 +301,10 @@ async function main() {
       : undefined,
   })
 
-  console.log(`🔑 Authenticated as: ${process.env.GOOGLE_AUTH_EMAIL}\n`)
+  console.log(`Authenticated as: ${process.env.GOOGLE_AUTH_EMAIL}\n`)
 
   // --- Gmail ---
-  console.log('📧 Gmail — 5 most recent emails:\n')
+  console.log('Gmail — 5 most recent emails:\n')
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
 
   const { data: listData } = await gmail.users.messages.list({
@@ -396,7 +334,7 @@ async function main() {
   }
 
   // --- Calendar ---
-  console.log('📅 Google Calendar — next 7 days:\n')
+  console.log('Google Calendar — next 7 days:\n')
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
 
   const now = new Date()
@@ -428,30 +366,32 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 ```
 
----
-
-## Step 12 — Run the TypeScript Smoke Test
+Run it:
 
 ```bash
 pnpm start scripts/google-smoke-test.ts
 ```
 
-**Expected output:** The authenticated email, followed by 5 Gmail subject lines and up to 10 upcoming calendar events.
+**Expected:** The authenticated email, followed by Gmail subjects and upcoming calendar events.
 
 **Troubleshooting:**
-- `invalid_grant` — the OAuth flow timed out or the account isn't added as a test user. Re-run `pnpm start scripts/google-oauth-setup.ts` to get fresh tokens.
-- `Access Not Configured` — an API isn't enabled. Re-run Step 5 API enablement.
-- `insufficient authentication scopes` — re-run `pnpm start scripts/google-oauth-setup.ts` (the `prompt: 'consent'` flag forces re-authorization with the full scope set).
+- `invalid_grant` — re-run `pnpm start scripts/google-oauth-setup.ts` for fresh tokens
+- `Access Not Configured` — enable the API in Cloud Console
+- `insufficient authentication scopes` — re-run the OAuth setup script
 
 ---
 
 ## Finish
 
-Once both smoke tests pass (gws in Step 10, TypeScript in Step 12), let the user know they're all set.
+Once both smoke tests pass (gws in Step 4, TypeScript in Step 5f), the user is all set.
 
-> **Note:** `.env` is gitignored, so there's nothing to commit at the end of this setup — that's expected and correct. The credentials live only on this machine.
+> `.env` is gitignored — nothing to commit. Credentials live only on this machine.
 
-**`gws` CLI — quick reference for everyday use:**
+For subsequent `gws` logins: `gws auth login`
+
+---
+
+## Quick reference — gws commands
 
 ```bash
 # Gmail
@@ -471,9 +411,3 @@ gws drive files get --params '{"fileId": "<fileId>", "alt": "media"}' > ./file.p
 gws tasks tasklists list
 gws tasks tasks list --params '{"tasklist": "<tasklistId>"}'
 ```
-
-**What they now have:**
-- `gws` CLI (official Google Workspace CLI from github.com/googleworkspace/cli) for interactive use and shell scripting against all Google Workspace APIs
-- `googleapis` npm package for TypeScript agent scripts, with tokens in `.env` that auto-refresh
-- Both tools use the same GCP project — only one Cloud project to manage
-- For subsequent logins: `gws auth login`

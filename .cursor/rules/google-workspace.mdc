@@ -14,7 +14,7 @@ First verify it's available:
 gws --version
 ```
 
-If not installed, run the **Setup Google Workspace** command.
+If not installed, tell the user to open **Terminal** (not Cursor) and run the **Setup Google Workspace** command — `gws auth setup` is interactive and requires a real terminal.
 
 ```bash
 # Gmail

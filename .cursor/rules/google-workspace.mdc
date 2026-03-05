@@ -4,40 +4,38 @@ alwaysApply: true
 
 # Google Workspace (Gmail, Calendar, Drive, etc.)
 
-## One-off lookups — use the `gog` CLI
+## One-off lookups — use the `gws` CLI
 
-For quick, one-off tasks against Gmail, Calendar, Drive, Tasks, Contacts, Sheets, or Docs, use the `gog` CLI directly. No scripting needed.
+For quick, one-off tasks against Gmail, Calendar, Drive, Tasks, Contacts, Sheets, or Docs, use the `gws` CLI directly. No scripting needed.
 
 First verify it's available:
 
 ```bash
-gog --version
+gws --version
 ```
 
-If not installed, run the **Setup Google Workspace** command.
+If not installed, tell the user to open **Terminal** (not Cursor) and run the **Setup Google Workspace** command — `gws auth setup` is interactive and requires a real terminal.
 
 ```bash
 # Gmail
-gog gmail search 'from:alice@example.com newer_than:7d' --max 10
-gog gmail search 'is:unread subject:"invoice"' --json | jq '.threads[].snippet'
-gog gmail thread get <threadId>
+gws gmail users messages list --params '{"userId": "me", "maxResults": 10, "q": "from:alice@example.com newer_than:7d"}'
+gws gmail users messages list --params '{"userId": "me", "maxResults": 10, "q": "is:unread subject:invoice"}'
 
 # Calendar
-gog calendar events primary --today --max 50 
-gog calendar events primary --week --max 50 
-gog calendar search "standup" --days 30 --max 50 
+gws calendar events list --params '{"calendarId": "primary", "timeMin": "'$(date -u +%Y-%m-%dT00:00:00Z)'", "maxResults": 50}'
+gws calendar events list --params '{"calendarId": "primary", "maxResults": 50}'
 
 # Drive
-gog drive search "Q4 report" --max 10
-gog drive download <fileId> --out ./file.pdf
+gws drive files list --params '{"q": "name contains '\''Q4 report'\''", "pageSize": 10}'
+gws drive files get --params '{"fileId": "<fileId>", "alt": "media"}' > ./file.pdf
 
 # Tasks / Contacts / Sheets
-gog tasks lists
-gog contacts search "Alice"
-gog sheets get <spreadsheetId> 'Sheet1!A1:D20'
+gws tasks tasklists list
+gws people connections list --params '{"resourceName": "people/me", "personFields": "names,emailAddresses"}'
+gws sheets spreadsheets values get --params '{"spreadsheetId": "<spreadsheetId>", "range": "Sheet1!A1:D20"}'
 ```
 
-Add `--json` to any command for machine-readable output.
+All `gws` output is structured JSON by default.
 
 ## Programmatic scripts — use the googleapis TypeScript SDK
 
@@ -70,7 +68,7 @@ const sheets = google.sheets({ version: 'v4', auth: oauth2Client })
 
 | Task | Use |
 |------|-----|
-| Search inbox, check calendar, look up a file | `gog` CLI |
-| Quick data extraction piped to `jq` | `gog --json` |
+| Search inbox, check calendar, look up a file | `gws` CLI |
+| Quick data extraction (output is already JSON) | `gws` piped to `jq` |
 | Loop over results, write CSV, combine APIs | TypeScript + `googleapis` |
 | Scheduled or recurring automation | TypeScript + `googleapis` |
